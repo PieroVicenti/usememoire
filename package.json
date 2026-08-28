@@ -8,24 +8,18 @@
     "usememoire": "dist/server.js"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsx src/server.ts",
-    "start": "node dist/server.js"
+    "build:ui": "cd ui && npm run build",
+    "build:server": "tsc",
+    "build": "npm run build:ui && npm run build:server",
+    "dev:ui": "cd ui && npm run dev",
+    "dev": "tsx src/server.ts"
   },
-  "keywords": [
-    "mcp",
-    "memory",
-    "llm",
-    "claude",
-    "ai"
-  ],
+  "keywords": ["mcp", "memory", "llm", "claude", "ai"],
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "@types/sql.js": "^1.4.11",
     "express": "^5.2.1",
     "openai": "^7.5.0",
-    "sql.js": "^1.14.2",
     "zod": "^3.25.76"
   },
   "devDependencies": {
