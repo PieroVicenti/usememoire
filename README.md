@@ -38,9 +38,8 @@ You or Claude calls save_memory() → new fact persisted locally
 - 🏠 **100% local** — your memory lives in a `.db` file on your machine
 - 🔌 **MCP native** — works out of the box with Claude Desktop, Cursor, Zed and any MCP client
 - 🔍 **FTS5 full-text search** — fast, accurate keyword search via SQLite
-- 🗂️ **Project isolation** — memories are namespaced by `workspace_path`, no cross-project contamination
 - 🧠 **Two extraction modes** — MANUAL (explicit saves) or AUTO (LLM-assisted background extraction)
-- 🖥️ **Local dashboard** — view, search and delete memories at `http://localhost:3761`
+- 🖥️ **Local dashboard** — view, search and delete memories at `http://localhost:5173` (dev) or `http://localhost:3761` (prod)
 - 💸 **Token savings** — inject 20 tokens of context instead of re-explaining 500
 
 ---
@@ -48,6 +47,7 @@ You or Claude calls save_memory() → new fact persisted locally
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 22+
 - An MCP-compatible client (Claude Desktop, Cursor, etc.)
 
@@ -56,31 +56,60 @@ You or Claude calls save_memory() → new fact persisted locally
 ```bash
 git clone https://github.com/yourusername/usememoire.git
 cd usememoire
+
+# Install server dependencies
 npm install
-npm run build
+
+# Install UI dependencies
+cd ui && npm install && cd ..
 ```
+
+### Run
+
+You need two terminals running simultaneously:
+
+**Terminal 1 — MCP Server:**
+```bash
+npm run dev
+```
+
+**Terminal 2 — UI (optional, for dashboard):**
+```bash
+npm run dev:ui
+```
+
+Dashboard available at `http://localhost:5173`
+
+---
 
 ### Configure Claude Desktop
 
-Add this to your `claude_desktop_config.json`:
+Find your config file:
+
+- **Windows (Store)**: `C:\Users\<you>\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json`
+- **Windows (Direct)**: `C:\Users\<you>\AppData\Roaming\Claude\claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+Add the `mcpServers` block — be careful not to overwrite existing keys:
 
 ```json
 {
   "mcpServers": {
     "usememoire": {
-      "command": "node",
-      "args": ["/absolute/path/to/usememoire/dist/server.js"],
-      "cwd": "/absolute/path/to/usememoire"
+      "command": "npx",
+      "args": [
+        "tsx",
+        "C:\\Users\\<you>\\usememoire\\src\\server.ts"
+      ],
+      "cwd": "C:\\Users\\<you>\\usememoire"
     }
   }
 }
 ```
 
-Config file location:
-- **Windows**: `C:\Users\<you>\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json`
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+> ⚠️ Replace `<you>` with your actual Windows username. On macOS use forward slashes.
 
-Restart Claude Desktop — you should see usememoire appear under Connectors.
+Restart Claude Desktop completely — usememoire should appear under **Connectors**.
 
 ---
 
@@ -88,12 +117,12 @@ Restart Claude Desktop — you should see usememoire appear under Connectors.
 
 ### Save a memory explicitly
 
+Ask Claude directly:
 ```
 Use the save_memory tool to save: "we use JWT in HTTP-only cookies"
 ```
 
 Or use the tag anywhere in your message:
-
 ```
 We decided to use Inertia.js for all forms [SAVE_MEMORY]
 ```
@@ -106,7 +135,7 @@ Use search_memory to find anything about our auth setup
 
 ### Dashboard
 
-Open `http://localhost:3761` in your browser to view, search and delete saved memories.
+Open `http://localhost:5173` in your browser to view, search and delete saved memories.
 
 ---
 
@@ -141,10 +170,31 @@ For `auto` mode, add your OpenAI key:
 
 | Tool | Description |
 |------|-------------|
-| `save_memory` | Save a fact with category and workspace scoping |
-| `search_memory` | Full-text search across saved memories |
+| `save_memory` | Save a fact with a category tag |
+| `search_memory` | Full-text search across all saved memories |
 | `process_message` | Pipeline: tag → regex → LLM extraction |
-| `list_memories` | List all memories for current workspace |
+| `list_memories` | List all saved memories |
+
+---
+
+## Project Structure
+
+```
+usememoire/
+├── src/                  # MCP server (TypeScript)
+│   ├── db/               # SQLite schema and queries
+│   ├── extractor/        # Regex and LLM fact extractors
+│   ├── ui/               # Express HTTP server for dashboard
+│   │   └── dist/         # Built Vue app (generated)
+│   ├── config.ts
+│   └── server.ts         # MCP server entry point
+├── ui/                   # Dashboard source (Vue 3 + Vite)
+│   └── src/
+│       └── App.vue
+├── .gitignore
+├── package.json
+└── README.md
+```
 
 ---
 
